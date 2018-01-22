@@ -9,7 +9,6 @@
 6 = Minute
 7 = Second
 8 = extension
-
 '''
 
 import os
@@ -37,24 +36,20 @@ dir_list = os.scandir(path)
 
 files = []
 for item in dir_list:
-    if item.is_file(): # and not item.name.startswith('.')
+    if item.is_file() and not item.name.startswith('.'):
         files.append(re.split(' |_|\.',item.name) + [item.name])
 
+invalid_files = False
+for f in files:
+    if len(f) != 10:
+        if not invalid_files:
+            print('Filename pattern changed. Code needs correcting. Exiting without modifying files.')
+            print('Filenames should be in format: \'First Last MM_DD_YYYY HH_MM_SS.jpg\'.')
+            invalid_files = True
+        print('Invalid filename: {}'.format(f[-1]))
 
-maxL = 0
-minL = 10000
-
-for i in files:
-    if len(i) > maxL:
-        maxL = len(i)
-    elif len(i) < minL:
-        minL = len(i)
-
-if not (maxL == minL == 10):
-    print('Filename pattern changed. Code needs correcting. Exiting without modifying files.')
-    print('Filenames should be in format: \'First Last MM_DD_YYYY HH_MM_SS.jpg\'.')
+if invalid_files:
     exit(1)
-
 
 # filter out movies or other files
 images = [f for f in files if (f[8] == 'jpg' or f[8] == 'png')]

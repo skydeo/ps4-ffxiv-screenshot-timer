@@ -1,0 +1,10 @@
+Instructions to apply correct timestamps to screenshots from PS4:
+
+1.	Build file list: ls -la > screenshotListing.txt
+2.	Import screenshotListing.txt into Excel as fixed-width, separating out just file name
+3.	Delete first column, use Excel file screenshotRetimeHelp.xlsx to calculate commands
+	(This should just entail dropping in the filename column and making sure the calculated fields go all the way to the bottom of the list).
+4.	Copy/paste the last column (N) into a text file (screenshotRetimeCommands.txt)
+5.	Open in Atom, convert line endings to Unix format (Packages > Convert Line Endings To > Unix)
+6.	Verify line endings are actually \n (od -c screenshotRetimeCommands.txt)
+7.	Execute commands: bash screenshotRetimeCommands.txt

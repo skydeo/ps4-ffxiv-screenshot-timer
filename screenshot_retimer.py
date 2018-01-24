@@ -31,21 +31,18 @@ args = parser.parse_args()
 
 
 
-def correct_file_time(filename, year, month, day, hours, minutes, seconds):
-    time_string = '{}-{}-{} {}:{}:{}'.format(year, month, day, hours, minutes, seconds)
-    time_struct = time.strptime(time_string, '%Y-%m-%d %H:%M:%S')
+def correct_file_time(filename, datetime_string):
+    time_struct = time.strptime(datetime_string, '%m/%d/%Y %H:%M:%S')
     seconds_since = int(time.mktime(time_struct))
 
     full_file_path = path + filename
 
     os.utime(full_file_path, (seconds_since, seconds_since))
 
-def correct_file_time_setfile(filename, year, month, day, hours, minutes, seconds):
-    time_string = '{}/{}/{} {}:{}:{}'.format(month, day, year, hours, minutes, seconds)
-
+def correct_file_time_setfile(filename, datetime_string):
     full_file_path = path + filename
 
-    os.system('SetFile -dm "{}" {}'.format(time_string, full_file_path.replace(' ', '\\ ')))
+    os.system('SetFile -dm "{}" {}'.format(datetime_string, full_file_path.replace(' ', '\\ ')))
 
 
 
@@ -96,19 +93,23 @@ for i in images:
     first = i[0]
     last = i[1]
     extension = i[8]
-    original_filename = i[-1]
+    original_filename = i[9]
 
     if args.verbose:
         print('\'{}\''.format(original_filename))
         print('\tRetiming{}to {}/{}/{} {}:{}:{}{}'.format( ' (using SetFile) ' if args.creation_time else ' ', year, month, day, hours, minutes, seconds, '\n' if not args.rename else ''))
+    
     if args.execute:
-        if args.creation_time:
-            correct_file_time_setfile(original_filename, year, month, day, hours, minutes, seconds)
-        else:
-            correct_file_time(original_filename, year, month, day, hours, minutes, seconds)
+        time_string = '{}/{}/{} {}:{}:{}'.format(month, day, year, hours, minutes, seconds)
 
-    new_filename = '{} {} {}{}{}_{}{}{}.{}'.format(first, last, year, month, day, hours, minutes, seconds, extension)
+        if args.creation_time:
+            correct_file_time_setfile(original_filename, time_string)
+        else:
+            correct_file_time(original_filename, time_string)
+
     if args.rename:
+        new_filename = '{} {} {}{}{}_{}{}{}.{}'.format(first, last, year, month, day, hours, minutes, seconds, extension)
+        
         if args.verbose:
             print('\tRenaming to \'{}\'\n'.format(new_filename))
         if args.execute:

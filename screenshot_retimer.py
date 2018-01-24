@@ -15,22 +15,38 @@ import os
 import re
 import time
 import timeit
+import argparse
 
 start_time = timeit.default_timer()
 
-verbose = True
+parser = argparse.ArgumentParser(description='Correct the file access and modified time on screenshots exported from the PS4.')
+parser.add_argument('directory', help='Path to the directory containing all the images.')
+parser.add_argument('-e', '--execute', action='store_true', help='Modifiy the files.')
+parser.add_argument('-r', '--rename', action='store_true', help='Rename the files to First Last YYYYMMDD_HHMMSS.')
+parser.add_argument('-v', '--verbose', action='store_true', help='Display additional logging.')
+parser.add_argument('-c', '--creation_time', action='store_true', help='Use the macOS SetFile command to also set file creation time. WARNING: very slow!')
 
-def correct_file_time(filename, time_string):
-    time_struct = time.strptime(time_string, '%Y %m %d %H %M %S')
+args = parser.parse_args()
+
+def correct_file_time(filename, year, month, day, hours, minutes, seconds):
+    time_string = '{}-{}-{} {}:{}:{}'.format(year, month, day, hours, minutes, seconds)
+    time_struct = time.strptime(time_string, '%Y-%m-%d %H:%M:%S')
     seconds_since = int(time.mktime(time_struct))
 
     full_file_path = path + filename
 
     os.utime(full_file_path, (seconds_since, seconds_since))
 
-path = '~/Desktop/PS4/SHARE/Screenshots/FINAL FANTASY XIV/'
+def correct_file_time_setfile(filename, year, month, day, hours, minutes, seconds):
+    time_string = '{}/{}/{} {}:{}:{}'.format(month, day, year, hours, minutes, seconds)
 
-path = os.path.expanduser(path)
+    full_file_path = path + filename
+
+    os.system('SetFile -dm "{}" {}'.format(time_string, full_file_path.replace(' ', '\\ ')))
+
+path = os.path.expanduser(args.directory)
+if args.verbose:
+    print('Checking directory {}'.format(path))
 
 dir_list = os.scandir(path)
 
@@ -52,17 +68,42 @@ if invalid_files:
     exit(1)
 
 # filter out movies or other files
-images = [f for f in files if (f[8] == 'jpg' or f[8] == 'png')]
+images = [f for f in files if f[8] in ['jpg', 'png']]
+
+if args.verbose:
+    print('Adjusting file creation/modification times.')
 
 for i in images:
-    time_string = i[4] + ' ' + i[2] + ' ' + i[3] + ' ' + i[5] + ' ' + i[6] + ' ' + i[7]
-    filename = i[-1]
+    year = i[4]
+    month = i[2]
+    day = i[3]
+    hours = i[5]
+    minutes = i[6]
+    seconds = i[7]
+    first = i[0]
+    last = i[1]
+    extension = i[8]
+    original_filename = i[-1]
 
-    correct_file_time(filename, time_string)
+    if args.verbose:
+        print('\'{}\''.format(original_filename))
+        print('\tRetiming to {}/{}/{} {}:{}:{}{}{}'.format(year, month, day, hours, minutes, seconds, ' using SetFile.' if args.creation_time else '', '\n' if not args.rename else ''))
+    if args.execute:
+        if args.creation_time:
+            correct_file_time_setfile(original_filename, year, month, day, hours, minutes, seconds)
+        else:
+            correct_file_time(original_filename, year, month, day, hours, minutes, seconds)
 
-    # new_filename = i[0] + ' ' + i[1] + ' ' + time_string.replace(' ','') + '.' + i[8]
-
-    # os.rename(path + filename, path + new_filename)
+    new_filename = '{} {} {}{}{}_{}{}{}.{}'.format(first, last, year, month, day, hours, minutes, seconds, extension)
+    if args.rename:
+        if args.verbose:
+            print('\tRenaming to \'{}\'\n'.format(new_filename))
+        if args.execute:
+            os.rename(path + original_filename, path + new_filename)
 
 end_time = timeit.default_timer()
-print('Completed in {0} seconds.'.format(round(end_time-start_time,2)))
+print('Completed in {0} seconds.\n'.format(round(end_time-start_time,2)))
+print('{} files {} {}.'.format(len(images), 'were' if args.execute else 'will be', 'retimed and renamed' if args.rename else 'retimed'))
+
+if not args.execute:
+    print('DRY RUN COMPLETE. No files were modified. Run command with -e flag to execute.')

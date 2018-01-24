@@ -16,6 +16,7 @@ import re
 import time
 import timeit
 import argparse
+from shutil import which
 
 start_time = timeit.default_timer()
 
@@ -27,6 +28,8 @@ parser.add_argument('-v', '--verbose', action='store_true', help='Display additi
 parser.add_argument('-c', '--creation_time', action='store_true', help='Use the macOS SetFile command to also set file creation time. WARNING: very slow!')
 
 args = parser.parse_args()
+
+
 
 def correct_file_time(filename, year, month, day, hours, minutes, seconds):
     time_string = '{}-{}-{} {}:{}:{}'.format(year, month, day, hours, minutes, seconds)
@@ -43,6 +46,16 @@ def correct_file_time_setfile(filename, year, month, day, hours, minutes, second
     full_file_path = path + filename
 
     os.system('SetFile -dm "{}" {}'.format(time_string, full_file_path.replace(' ', '\\ ')))
+
+
+
+if args.creation_time:
+    if not which('SetFile'):
+        print('SetFile flag was used, but SetFile command cannot be found.')
+        print('Install Xcode command line tools from https://developer.apple.com')
+        exit(1)
+    elif args.verbose:
+        print('SetFile command found:',which('SetFile'))
 
 path = os.path.expanduser(args.directory)
 if args.verbose:
@@ -87,7 +100,7 @@ for i in images:
 
     if args.verbose:
         print('\'{}\''.format(original_filename))
-        print('\tRetiming to {}/{}/{} {}:{}:{}{}{}'.format(year, month, day, hours, minutes, seconds, ' using SetFile.' if args.creation_time else '', '\n' if not args.rename else ''))
+        print('\tRetiming{}to {}/{}/{} {}:{}:{}{}'.format( ' (using SetFile) ' if args.creation_time else ' ', year, month, day, hours, minutes, seconds, '\n' if not args.rename else ''))
     if args.execute:
         if args.creation_time:
             correct_file_time_setfile(original_filename, year, month, day, hours, minutes, seconds)
@@ -103,7 +116,7 @@ for i in images:
 
 end_time = timeit.default_timer()
 print('Completed in {0} seconds.\n'.format(round(end_time-start_time,2)))
-print('{} files {} {}.'.format(len(images), 'were' if args.execute else 'will be', 'retimed and renamed' if args.rename else 'retimed'))
+print('{} files {} {}{}.'.format(len(images), 'were' if args.execute else 'will be', 'renamed and retimed' if args.rename else 'retimed', ' using SetFile' if args.creation_time else ''))
 
 if not args.execute:
     print('DRY RUN COMPLETE. No files were modified. Run command with -e flag to execute.')

@@ -20,12 +20,12 @@ from shutil import which
 
 start_time = timeit.default_timer()
 
-parser = argparse.ArgumentParser(description='Correct the file access and modified time on screenshots exported from the PS4.')
-parser.add_argument('directory', help='Path to the directory containing all the images.')
+parser = argparse.ArgumentParser(description='Correct the file creation and modified time on FFXIV screenshots exported from the PS4.')
+parser.add_argument('directory', help='Path to the directory containing the images.')
 parser.add_argument('-e', '--execute', action='store_true', help='Modifiy the files.')
 parser.add_argument('-r', '--rename', action='store_true', help='Rename the files to First Last YYYYMMDD_HHMMSS.')
 parser.add_argument('-v', '--verbose', action='store_true', help='Display additional logging.')
-parser.add_argument('-c', '--creation_time', action='store_true', help='Use the macOS SetFile command to also set file creation time. WARNING: very slow!')
+parser.add_argument('-c', '--creation_time', action='store_true', help='Use the macOS SetFile command to also set file creation time. It\'s slow!!')
 
 args = parser.parse_args()
 
@@ -77,39 +77,52 @@ for f in files:
 if invalid_files:
     exit(1)
 
+# invalid_files = []
+# for f in files:
+#     filename = f[-1]
+#     if len(f) != 10:
+#         print('Invalid filename: {}'.format(filename))
+#         invalid_files.append(filename)
+#     elif filename[-3:] not in ['jpg', 'png']:
+#         print('Invalid extension: {}'.format(filename))
+#         invalid_files.append(filename)
+#     else:
+#         images.append(f)
+
+
 # filter out movies or other files
 images = [f for f in files if f[8] in ['jpg', 'png']]
+
+# if args.verbose:
+#     # print(set([image[9] for image in images]))
+#     excluded_files = list(set(dir_list) - set([image[9] for image in images]))
+#     if len(excluded_files) > 0:
+#         print('The following files were excluded:')
+#         for ex in excluded_files:
+#             print('--- {}'.format(ex))
+
 
 if args.verbose:
     print('Adjusting file creation/modification times.')
 
 for i in images:
-    year = i[4]
-    month = i[2]
-    day = i[3]
-    hours = i[5]
-    minutes = i[6]
-    seconds = i[7]
-    first = i[0]
-    last = i[1]
-    extension = i[8]
-    original_filename = i[9]
+    [first, last, month, day, year, hours, minutes, seconds, extension, original_filename] = i
 
+    time_string = '{}/{}/{} {}:{}:{}'.format(month, day, year, hours, minutes, seconds)
+    time_string_sane = '{}/{}/{} {}:{}:{}'.format(year, month, day, hours, minutes, seconds)
+    new_filename = '{} {} {}{}{}_{}{}{}.{}'.format(first, last, year, month, day, hours, minutes, seconds, extension)
+    
     if args.verbose:
         print('\'{}\''.format(original_filename))
-        print('\tRetiming{}to {}/{}/{} {}:{}:{}{}'.format( ' (using SetFile) ' if args.creation_time else ' ', year, month, day, hours, minutes, seconds, '\n' if not args.rename else ''))
+        print('\tRetiming to {}{}'.format(time_string_sane, '\n' if not args.rename else ''))
     
     if args.execute:
-        time_string = '{}/{}/{} {}:{}:{}'.format(month, day, year, hours, minutes, seconds)
-
         if args.creation_time:
             correct_file_time_setfile(original_filename, time_string)
         else:
             correct_file_time(original_filename, time_string)
 
     if args.rename:
-        new_filename = '{} {} {}{}{}_{}{}{}.{}'.format(first, last, year, month, day, hours, minutes, seconds, extension)
-        
         if args.verbose:
             print('\tRenaming to \'{}\'\n'.format(new_filename))
         if args.execute:

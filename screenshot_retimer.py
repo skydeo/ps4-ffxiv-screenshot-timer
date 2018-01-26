@@ -88,6 +88,8 @@ if (args.verbose or args.noisy):
     else:
         print()
 
+if (args.verbose or args.noisy):
+    print('Retiming images.')
 
 for i in images:
     [first, last, month, day, year, hours, minutes, seconds, extension, original_filename] = i
@@ -117,7 +119,7 @@ print('Completed in {0} seconds.'.format(round(end_time-start_time,2)))
 print('{} files {} {}{}.'.format(len(images), 'were' if args.execute else 'will be', 'renamed and retimed' if args.rename else 'retimed', ' using SetFile' if args.creation_time else ''))
 
 if len(invalid_files) > 0:
-    print('\nThe following files {} processed. {}.'.format('weren\'t' if args.execute else 'won\'t be', 'See above' if (args.verbose or args.noisy) else 'Run with the -v flag for more details'))
+    print('\nThe following {} {} {} processed. {}.'.format(len(invalid_files),'files' if len(invalid_files) != 1 else 'file','weren\'t' if args.execute else 'won\'t be', 'See above' if (args.verbose or args.noisy) else 'Run with the -v flag for more details'))
     for invalid_file in invalid_files:
         print('\t\'{}\''.format(invalid_file))
     print()

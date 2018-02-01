@@ -16,7 +16,7 @@ import re
 import time
 import timeit
 import argparse
-from shutil import which
+import shutil
 
 start_time = timeit.default_timer()
 
@@ -24,10 +24,10 @@ parser = argparse.ArgumentParser(description='Correct the file creation and modi
 parser.add_argument('directory', help='Path to the directory containing the images.')
 parser.add_argument('-e', '--execute', action='store_true', help='Modifiy the files.')
 parser.add_argument('-r', '--rename', action='store_true', help='Rename the files to First Last YYYYMMDD_HHMMSS.')
+parser.add_argument('-c', '--creation_time', action='store_true', help='Use the macOS SetFile command to also set file creation time. It\'s slow!!')
 group = parser.add_mutually_exclusive_group()
 group.add_argument('-v', '--verbose', action='store_true', help='Display additional logging.')
 group.add_argument('-n', '--noisy', action='store_true', help='Display a huge amount of logging.')
-parser.add_argument('-c', '--creation_time', action='store_true', help='Use the macOS SetFile command to also set file creation time. It\'s slow!!')
 
 args = parser.parse_args()
 
@@ -46,12 +46,12 @@ def correct_file_time_setfile(filename, datetime_string):
 
 
 if args.creation_time:
-    if not which('SetFile'):
+    if not shutil.which('SetFile'):
         print('Creation time flag (-c) was used, but SetFile command cannot be found.')
         print('Install Xcode command line tools from https://developer.apple.com')
         exit(1)
     elif args.verbose or args.noisy:
-        print('SetFile command found:',which('SetFile'))
+        print('SetFile command found:',shutil.which('SetFile'))
 
 path = os.path.expanduser(args.directory)
 if args.verbose or args.noisy:

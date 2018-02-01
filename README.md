@@ -8,3 +8,6 @@ There are two ways it assigns times, a fast method which works most of the time 
 ¹ 'Stored' in a non-sortable way using the stupid US MM-DD-YYYY notation.
 
 ² I guess most UNIX systems don't care about file creation time, on access and modified times. The file creation time will be set if the modified time is before present.
+
+TODO
+* Make it work with videos. For some unknown reason, there are at least 3 different formats of video file names over the years. Shouldn't be hard, but need to add flags and test.

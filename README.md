@@ -4,7 +4,7 @@ I play a lot of FFXIV on the PS4, and take a lot of screenshots when doing so (o
 
 Example usage: `python screenshot_retimer.py ~/Desktop/PS4/FFXIV/Screenshots/ -e`
 
-I settled on using the `-e` flag to actually execute, but that might be a little too cautious. There are a couple of other optional parameters you can read about using the `-h` flag, e.g. `python screenshot_retimer.py -h`.
+I settled on using the `-e` flag to actually execute, but that might be a little overly cautious. There are a couple of other optional parameters you can read about using the `-h` flag (`python screenshot_retimer.py -h`).
 
 There are two ways it assigns times, a fast method which works most of the time but doesn't assign file creation times on macOS² for some edge cases, and a slow method that does but requires the installation of macOS Developer Tools. Chances are these are already installed for most targets of this script.
 

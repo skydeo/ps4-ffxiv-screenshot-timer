@@ -23,7 +23,7 @@ start_time = timeit.default_timer()
 parser = argparse.ArgumentParser(description='Correct the file creation and modified time on FFXIV screenshots exported from the PS4.')
 parser.add_argument('directory', help='Path to the directory containing the images.')
 parser.add_argument('-e', '--execute', action='store_true', help='Modifiy the files.')
-parser.add_argument('-r', '--rename', action='store_true', help='Rename the files to First Last YYYYMMDD_HHMMSS.')
+parser.add_argument('-r', '--rename', action='store_true', help='Rename the files to \'First Last YYYYMMDD_HHMMSS.xyz\'')
 parser.add_argument('-c', '--creation_time', action='store_true', help='Use the macOS SetFile command to also set file creation time. It\'s slow!!')
 group = parser.add_mutually_exclusive_group()
 group.add_argument('-v', '--verbose', action='store_true', help='Display additional logging.')
@@ -105,8 +105,7 @@ for i in images:
     if args.execute:
         if args.creation_time:
             correct_file_time_setfile(original_filename, time_string)
-        else:
-            correct_file_time(original_filename, time_string)
+        correct_file_time(original_filename, time_string)
 
     if args.rename:
         if args.noisy:

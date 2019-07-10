@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 from gooey import Gooey, GooeyParser
 
-# @Gooey()
+@Gooey()
 def main():
   start_time = timeit.default_timer()
 

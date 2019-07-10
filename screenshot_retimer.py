@@ -4,10 +4,10 @@ import time
 import timeit
 import argparse
 import shutil
+from pathlib import Path
 from gooey import Gooey, GooeyParser
 
-
-@Gooey()
+# @Gooey()
 def main():
   start_time = timeit.default_timer()
 
@@ -22,6 +22,11 @@ def main():
 
   args = parser.parse_args()
 
+
+  if args.noisy:
+    args.verbose = True
+
+
   def correct_file_time(filename, datetime_string):
     time_struct = time.strptime(datetime_string, '%m/%d/%Y %H:%M:%S')
     seconds_since = int(time.mktime(time_struct))
@@ -31,10 +36,19 @@ def main():
     print(full_file_path)
     os.utime(full_file_path, (seconds_since, seconds_since))
 
+
   def correct_file_time_setfile(filename, datetime_string):
     full_file_path = path + filename
 
     os.system('SetFile -dm "{}" {}'.format(datetime_string, full_file_path.replace(' ', '\\ ')))
+
+
+  def create_dir_list(input_dir):
+    p = Path(input_dir).iterdir()
+    dir_list = [entry for entry in p 
+                if entry.is_file()
+                and not entry.name.startswith('.')]
+    return dir_list
 
 
   if args.creation_time:
@@ -47,42 +61,18 @@ def main():
 
   path = os.path.expanduser(args.directory)
   if args.verbose or args.noisy:
-    print('Checking directory {}.'.format(path))
-  dir_list = os.scandir(path)
+    print('Checking directory {}'.format(path))
+  dir_list = create_dir_list(args.directory)
 
   files = []
+  videos = []
   for item in dir_list:
-    if item.is_file() and not item.name.startswith('.'):
-      files.append(re.split(' |_|\.',item.name) + [item.name])
-
-
-  # Validate the files to build images and invalid files lists.
-  images = []
-  invalid_files = []
-
-  if args.verbose or args.noisy:
-    print('Checking files for invalid file names and extensions.')
-  for f in files:
-    filename = f[-1]
-    if len(f) != 10:
-      invalid_files.append(filename)    
-      if args.verbose or args.noisy:
-        print('Invalid filename: \'{}\''.format(filename))
-    elif filename[-3:] not in ['jpg', 'png']:
-      invalid_files.append(filename)
-      if args.verbose or args.noisy:
-        print('Invalid extension: \'{}\''.format(filename))
-    else:
-      images.append(f)
-  if (args.verbose or args.noisy):
-    if not len(invalid_files):
-      print('None found.')
-    else:
-      print()
-
-  if (args.verbose or args.noisy):
-    print('Retiming images.')
+    if item.suffix.lower() in ['.jpg', '.png']:
+      files.append(re.split(r' |_|\.',item.name) + [item])
+    elif item.suffix.lower() == '.mp4':
+      videos.append(re.split(r' |_|\.',item.name) + [item])
   
+
   '''
   ['Xander', 'Barabroda', '06', '18', '2017', '13', '37', '51', 'jpg']
   0 = First name
@@ -95,6 +85,34 @@ def main():
   7 = Second
   8 = extension
   '''
+
+  # Validate the files to build images and invalid files lists.
+  images = []
+  invalid_files = []
+
+  if args.verbose:
+    print('Checking files for invalid file names and extensions.')
+  for f in files:
+    dir_entry = f[-1]
+    if len(f) != 10:
+      invalid_files.append(dir_entry)
+      if args.verbose:
+        print('Invalid filename: \'{}\''.format(dir_entry.name))
+    elif dir_entry.suffix not in ['.jpg', '.png', '.mp4']:
+      invalid_files.append(dir_entry)
+      if args.verbose:
+        print('Invalid extension: \'{}\''.format(dir_entry.name))
+    else:
+      images.append(f)
+  if args.verbose:
+    if not len(invalid_files):
+      print('None found.')
+    else:
+      print()
+
+  if args.verbose:
+    print('Retiming images.')
+  
 
   for i in images:
     [first, last, month, day, year, hours, minutes, seconds, extension, original_filename] = i
@@ -123,7 +141,7 @@ def main():
   print('{} files {} {}{}.'.format(len(images), 'were' if args.execute else 'will be', 'renamed and retimed' if args.rename else 'retimed', ' using SetFile' if args.creation_time else ''))
 
   if len(invalid_files) > 0:
-    print('\nThe following {} {} {} processed. {}.'.format(len(invalid_files),'files' if len(invalid_files) != 1 else 'file','weren\'t' if args.execute else 'won\'t be', 'See above' if (args.verbose or args.noisy) else 'Run with the -v flag for more details'))
+    print('\nThe following {} {} {} processed. {}.'.format(len(invalid_files),'files' if len(invalid_files) != 1 else 'file','weren\'t' if args.execute else 'won\'t be', 'See above' if args.verbose else 'Run with the -v flag for more details'))
     for invalid_file in invalid_files:
       print('\t\'{}\''.format(invalid_file))
     print()

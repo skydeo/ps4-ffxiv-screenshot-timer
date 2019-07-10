@@ -117,9 +117,9 @@ def main():
   for i in images:
     [first, last, month, day, year, hours, minutes, seconds, extension, original_filename] = i
 
-    time_string = '{}/{}/{} {}:{}:{}'.format(month, day, year, hours, minutes, seconds)
-    time_string_sane = '{}/{}/{} {}:{}:{}'.format(year, month, day, hours, minutes, seconds)
-    new_filename = '{} {} {}{}{}_{}{}{}.{}'.format(first, last, year, month, day, hours, minutes, seconds, extension)
+    time_string = f'{month}/{day}/{year} {hours}:{minutes}:{seconds}'
+    time_string_sane = f'{year}/{month}/{day} {hours}:{minutes}:{seconds}'
+    new_filename = f'{first} {last} {year}{month}{day}_{hours}{minutes}{seconds}.{extension}'
 
     if args.noisy:
       print('\'{}\''.format(original_filename))
